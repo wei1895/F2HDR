@@ -1,0 +1,87 @@
+"""Real benchmark dataset (DeepHDRVideo dynamic & static), 2-exposure.
+
+Used both for per-epoch validation during training (DeepHDRVideo dynamic) and for evaluation.
+Each sample provides 3 consecutive LDR frames (with their exposures) and the
+ground-truth HDR aligned to the reference (middle) frame.
+"""
+import os
+
+import numpy as np
+import torch
+from imageio import imread
+from torch.utils.data import Dataset
+
+from utils.utils import read_16bit_tif, read_hdr, read_list
+
+np.random.seed(0)
+
+
+class Real_Benchmark_Dataset(Dataset):
+    def __init__(self, root_dir, nframes=3, nexps=2):
+        assert nexps == 2, "F2HDR supports 2 exposures only"
+        self.root_dir = root_dir
+        self.nframes = nframes
+        self.nexps = nexps
+        self.scene_list = read_list(os.path.join(self.root_dir, "scene_all.txt"))
+
+        self.expos_list, self.img_list, self.hdrs_list = [], [], []
+        for scene in self.scene_list:
+            img_dir = os.path.join(self.root_dir, scene)
+            img_list, hdr_list = self._load_img_hdr_list(img_dir)
+            e_list = self._load_exposure_list(os.path.join(img_dir, "Exposures.txt"), img_num=len(img_list))
+
+            for i in range(0, len(img_list) - (self.nframes + 2) + 1):
+                self.expos_list.append(e_list[i:i + self.nframes + 2])
+                self.img_list.append(img_list[i:i + self.nframes + 2])
+                self.hdrs_list.append(hdr_list[i:i + self.nframes + 2])
+
+        print("[%s] totaling %d samples" % (self.__class__.__name__, len(self.img_list)))
+
+    def _load_img_hdr_list(self, img_dir):
+        if os.path.exists(os.path.join(img_dir, "img_hdr_list.txt")):
+            img_hdr_list = np.genfromtxt(os.path.join(img_dir, "img_hdr_list.txt"), dtype="str")
+            img_list = img_hdr_list[:, 0]
+            hdr_list = img_hdr_list[:, 1]
+        else:
+            img_list = np.genfromtxt(os.path.join(img_dir, "img_list.txt"), dtype="str")
+            hdr_list = ["None"] * len(img_list)
+        img_list = [os.path.join(img_dir, p) for p in img_list]
+        hdr_list = [os.path.join(img_dir, p) for p in hdr_list]
+        return img_list, hdr_list
+
+    def _load_exposure_list(self, expos_path, img_num):
+        expos = np.genfromtxt(expos_path, dtype="float")
+        expos = np.power(2, expos - expos.min()).astype(np.float32)
+        return np.tile(expos, int(img_num / len(expos) + 1))[:img_num]
+
+    def __getitem__(self, index):
+        ldrs, expos = [], []
+        img_paths, hdr_path = self.img_list[index], self.hdrs_list[index][2]
+        exposures_all = np.array(self.expos_list[index]).astype(np.float32)
+        for i in range(1, 4):
+            if img_paths[i][-4:] == ".tif":
+                img = read_16bit_tif(img_paths[i])
+            else:
+                img = imread(img_paths[i]) / 255.0
+            ldrs.append(img)
+            expos.append(exposures_all[i])
+
+        hdr = read_hdr(hdr_path)
+        if hdr.max() > 1:
+            hdr = hdr / hdr.max()
+        hdr_tensor = torch.from_numpy(hdr.astype(np.float32).transpose(2, 0, 1))
+
+        ldrs_tensor, expos_tensor = [], []
+        for i in range(len(ldrs)):
+            ldrs_tensor.append(torch.from_numpy(ldrs[i].astype(np.float32).transpose(2, 0, 1)))
+            expos_tensor.append(torch.tensor(expos[i]))
+
+        return {
+            "hdr_path": hdr_path.split("/")[-2] + "_" + hdr_path.split("/")[-1],
+            "hdr": hdr_tensor,
+            "ldrs": ldrs_tensor,
+            "expos": expos_tensor,
+        }
+
+    def __len__(self):
+        return len(self.img_list)
