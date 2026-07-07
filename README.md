@@ -49,7 +49,7 @@ F2HDR/data
 
 ## Pretrained Models
 
-Download our pretrained F²HDR checkpoint from [Baidu Netdisk](https://pan.baidu.com/s/1rIHBOyq1ds_S7CBso7oyOw?pwd=qqhn) (code: `qqhn`) and the SEA-RAFT weight `Tartan-C-T-TSKH-spring540x960-M.pth` from [Google Drive](https://drive.google.com/drive/folders/1YLovlvUW94vciWvTyLf-p3uWscbOQRWW?usp=sharing). Place them under `pretrained_models/`:
+Download our pretrained F²HDR checkpoint from [Google Drive](https://drive.google.com/file/d/19y8MJdJD_iocSUGt8pL1TBoeI4zAvnS6/view?usp=sharing) or [Baidu Netdisk](https://pan.baidu.com/s/1rIHBOyq1ds_S7CBso7oyOw?pwd=qqhn) (code: `qqhn`) and the SEA-RAFT weight `Tartan-C-T-TSKH-spring540x960-M.pth` from [Google Drive](https://drive.google.com/drive/folders/1YLovlvUW94vciWvTyLf-p3uWscbOQRWW?usp=sharing). Place them under `pretrained_models/`:
 
 ```
 F2HDR/pretrained_models
