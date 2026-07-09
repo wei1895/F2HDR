@@ -10,9 +10,12 @@ Huanjing Yue, Dawei Li, Shaoxiong Tu, Jingyu Yang
 [![arXiv](https://img.shields.io/badge/arXiv-2603.14920-b31b1b)](https://arxiv.org/abs/2603.14920)
 [![YouTube](https://img.shields.io/badge/YouTube-Video-red)](https://www.youtube.com/watch?v=7KgkS_g2qG8)
 
-<img src="materials/poster.png" alt="F2HDR poster" width="100%"/>
 
 </div>
+
+<p align="center">
+  <img src="materials/poster.png" alt="F2HDR poster" width="100%">
+</p>
 
 ---
 
